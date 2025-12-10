@@ -4,8 +4,15 @@ from assimetry import RSA
 import time
 
 app = Flask(__name__)
-CORS(app)
+CORS(app) # Isso libera o acesso para o React
 
+# --- ROTA DE TESTE (NOVA) ---
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        'status': 'Online',
+        'message': 'API de Criptografia Assimétrica rodando com sucesso!'
+    })
 keys_db = {
     'Alice': {'public': None, 'private': None},
     'Bob': {'public': None, 'private': None}
