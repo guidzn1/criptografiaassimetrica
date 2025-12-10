@@ -15,36 +15,39 @@ O projeto foi desenhado respeitando as **Heurísticas de Usabilidade de Nielsen*
 
 ## 🚀 Funcionalidades Principais
 
-* **🔑 Geração de Chaves RSA:** Visualização didática das chaves Pública $(e, n)$ e Privada $(d, n)$.
-* **💬 Simulação de Chat (Alice & Bob):** Troca de mensagens em tempo real simulada.
-* **🔒 Criptografia (Confidencialidade):** Garante que apenas o destinatário leia a mensagem.
-* **✍️ Assinatura Digital (Autenticidade):** Garante a autoria, integridade e não-repúdio da mensagem.
-* **🧮 Logs Matemáticos em Tempo Real:** Um terminal lateral exibe o passo a passo do cálculo:
-    * Conversão ASCII.
-    * Cálculo $C = M^e \pmod n$.
-    * Verificação $M = C^d \pmod n$.
-* **📱 Interface Responsiva:** Design moderno (Dark Mode) adaptável para Desktop e Mobile.
-* **🎓 Tutoriais Integrados:** Modais educativos explicam os conceitos conforme o uso.
+- **🔑 Geração de Chaves RSA:** Visualização didática das chaves Pública $(e, n)$ e Privada $(d, n)$.
+- **💬 Simulação de Chat (Alice & Bob):** Troca de mensagens em tempo real simulada.
+- **🔒 Criptografia (Confidencialidade):** Garante que apenas o destinatário leia a mensagem.
+- **✍️ Assinatura Digital (Autenticidade):** Garante a autoria, integridade e não-repúdio da mensagem.
+- **🧮 Logs Matemáticos em Tempo Real:** Um terminal lateral exibe o passo a passo do cálculo:
+  - Conversão ASCII.
+  - Cálculo $C = M^e \pmod n$.
+  - Verificação $M = C^d \pmod n$.
+- **📱 Interface Responsiva:** Design moderno (Dark Mode) adaptável para Desktop e Mobile.
+- **🎓 Tutoriais Integrados:** Modais educativos explicam os conceitos conforme o uso.
 
 ## 🛠️ Tecnologias Utilizadas
 
 ### Frontend (Interface)
-* **React (Vite):** Framework principal.
-* **CSS Puro (Custom Properties):** Design System moderno e responsivo.
-* **Framer Motion:** Animações fluidas de interface.
-* **Lucide React:** Ícones intuitivos.
-* **Axios:** Comunicação com o backend.
+
+- **React (Vite):** Framework principal.
+- **CSS Puro (Custom Properties):** Design System moderno e responsivo.
+- **Framer Motion:** Animações fluidas de interface.
+- **Lucide React:** Ícones intuitivos.
+- **Axios:** Comunicação com o backend.
 
 ### Backend (Motor Matemático)
-* **Python 3:** Linguagem base.
-* **Flask:** Servidor API REST.
-* **Algoritmo RSA Customizado:** Implementação didática do algoritmo (Geração de Primos, MDC Estendido, Exponenciação Modular).
+
+- **Python 3:** Linguagem base.
+- **Flask:** Servidor API REST.
+- **Algoritmo RSA Customizado:** Implementação didática do algoritmo (Geração de Primos, MDC Estendido, Exponenciação Modular).
 
 ---
 
 ## 📦 Como Rodar o Projeto
 
-Pré-requisitos: Você precisa ter o **Node.js** e o **Python** instalados no seu computador.
+**Pré-requisitos:**  
+Você precisa ter o **Node.js** e o **Python 3** instalados no seu computador.
 
 ### 1. Configurando o Backend (Python)
 
@@ -52,76 +55,121 @@ Abra um terminal na pasta `backend`:
 
 ```bash
 cd backend
+```
 
 Instale as dependências necessárias:
 
-Bash
-
+```bash
 # Windows
 py -m pip install flask flask-cors
 
 # Linux/Mac
 pip3 install flask flask-cors
+```
+
 Inicie o servidor:
 
-Bash
-
+```bash
 # Windows
 py api.py
 
 # Linux/Mac
 python3 api.py
-O servidor rodará em http://127.0.0.1:5000. Deixe este terminal aberto.
+```
 
-2. Configurando o Frontend (React)
-Abra um novo terminal na pasta frontend:
+O servidor rodará em:  
+**http://127.0.0.1:5000**
 
-Bash
+> ⚠️ Deixe este terminal aberto enquanto estiver usando a aplicação.
 
+---
+
+### 2. Configurando o Frontend (React)
+
+Abra um **novo terminal** na pasta `frontend`:
+
+```bash
 cd frontend
+```
+
 Instale as dependências:
 
-Bash
-
+```bash
 npm install
+```
+
 Inicie a interface:
 
-Bash
-
+```bash
 npm run dev
-O terminal mostrará um link (ex: http://localhost:5173). Clique nele para abrir o CryptoLab no seu navegador.
+```
 
-📚 Guia de Uso (Roteiro de Aula)
-Início: Ao abrir, leia o tutorial de boas-vindas.
+O terminal mostrará um link, por exemplo:  
+**http://localhost:5173**
 
-Gerar Chaves: Clique no botão "Iniciar". O backend calculará números primos e gerará as chaves para Alice e Bob.
+Acesse esse link no navegador para abrir o **CryptoLab**.
 
-Teste de Confidencialidade:
+---
 
-Certifique-se que o botão "Assinatura Digital" está DESLIGADO.
+## 📚 Guia de Uso (Roteiro de Aula)
 
-Envie uma mensagem de Alice para Bob.
+### 1. Início
 
-Observe o cadeado azul (apenas cifrado).
+- Ao abrir a aplicação, leia o **tutorial de boas-vindas**.
+- Clique em **"Iniciar"** para carregar o ambiente do laboratório.
 
-Veja no Log lateral o cálculo de criptografia pura.
+### 2. Gerar Chaves
 
-Teste de Autenticidade:
+- Clique no botão **"Gerar Chaves"** (ou equivalente).
+- O backend irá:
+  - Calcular números primos.
+  - Gerar as chaves Pública e Privada para **Alice** e **Bob**.
+- As chaves serão exibidas de forma didática na interface.
 
-Ative o botão "Assinatura Digital" no cabeçalho.
+### 3. Teste de Confidencialidade (Criptografia)
 
-Leia o modal explicativo sobre Integridade e Não-Repúdio.
+1. Certifique-se de que o botão **"Assinatura Digital"** está **DESLIGADO**.
+2. Envie uma mensagem de **Alice para Bob** pelo chat.
+3. Observe:
+   - O **cadeado azul**, indicando mensagem apenas cifrada.
+   - No **Log lateral**, o passo a passo da criptografia:
+     - Conversão da mensagem para ASCII / números.
+     - Cálculo de $C = M^e \pmod n$.
+4. Mostre aos alunos como a mensagem original não aparece em claro durante a transmissão.
 
-Envie uma nova mensagem.
+### 4. Teste de Autenticidade (Assinatura Digital)
 
-Observe o selo verde de "Autenticidade Garantida" ao receber.
+1. Ative o botão **"Assinatura Digital"** no cabeçalho.
+2. Leia o **modal explicativo** sobre:
+   - Integridade.
+   - Autenticidade.
+   - Não-repúdio.
+3. Envie uma nova mensagem.
+4. Observe:
+   - O **selo verde** de **"Autenticidade Garantida"** na mensagem recebida.
+   - No **Log lateral**, o processo de verificação da assinatura matemática.
+5. Discuta com os alunos como a assinatura garante que:
+   - A mensagem veio realmente de quem diz ter enviado.
+   - O conteúdo não foi alterado no meio do caminho.
 
-Veja no Log lateral a verificação da assinatura matemática.
+---
 
-🤝 Contribuição
-Este é um projeto acadêmico Open Source. Sinta-se à vontade para sugerir melhorias ou abrir Issues.
+## 🤝 Contribuição
 
-📄 Licença
-Este projeto está sob a licença MIT.
+Este é um projeto acadêmico **Open Source**.  
+Sinta-se à vontade para:
 
-Desenvolvido para a disciplina de Segurança de Sistemas Computacionais.
+- Sugerir melhorias.
+- Abrir **Issues**.
+- Enviar **Pull Requests** com novas funcionalidades ou correções.
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença **MIT**.  
+Você pode usar, modificar e distribuir o código, desde que mantenha os devidos créditos.
+
+---
+
+Desenvolvido para a disciplina de **Segurança de Sistemas Computacionais**. 🔐💻
