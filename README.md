@@ -52,3 +52,76 @@ Abra um terminal na pasta `backend`:
 
 ```bash
 cd backend
+
+Instale as dependências necessárias:
+
+Bash
+
+# Windows
+py -m pip install flask flask-cors
+
+# Linux/Mac
+pip3 install flask flask-cors
+Inicie o servidor:
+
+Bash
+
+# Windows
+py api.py
+
+# Linux/Mac
+python3 api.py
+O servidor rodará em http://127.0.0.1:5000. Deixe este terminal aberto.
+
+2. Configurando o Frontend (React)
+Abra um novo terminal na pasta frontend:
+
+Bash
+
+cd frontend
+Instale as dependências:
+
+Bash
+
+npm install
+Inicie a interface:
+
+Bash
+
+npm run dev
+O terminal mostrará um link (ex: http://localhost:5173). Clique nele para abrir o CryptoLab no seu navegador.
+
+📚 Guia de Uso (Roteiro de Aula)
+Início: Ao abrir, leia o tutorial de boas-vindas.
+
+Gerar Chaves: Clique no botão "Iniciar". O backend calculará números primos e gerará as chaves para Alice e Bob.
+
+Teste de Confidencialidade:
+
+Certifique-se que o botão "Assinatura Digital" está DESLIGADO.
+
+Envie uma mensagem de Alice para Bob.
+
+Observe o cadeado azul (apenas cifrado).
+
+Veja no Log lateral o cálculo de criptografia pura.
+
+Teste de Autenticidade:
+
+Ative o botão "Assinatura Digital" no cabeçalho.
+
+Leia o modal explicativo sobre Integridade e Não-Repúdio.
+
+Envie uma nova mensagem.
+
+Observe o selo verde de "Autenticidade Garantida" ao receber.
+
+Veja no Log lateral a verificação da assinatura matemática.
+
+🤝 Contribuição
+Este é um projeto acadêmico Open Source. Sinta-se à vontade para sugerir melhorias ou abrir Issues.
+
+📄 Licença
+Este projeto está sob a licença MIT.
+
+Desenvolvido para a disciplina de Segurança de Sistemas Computacionais.
