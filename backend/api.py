@@ -28,33 +28,40 @@ def generate():
             pub, priv = engine.generate_keypair()
             rsa_engines[name] = engine
             keys_db[name] = {'public': pub, 'private': priv}
+        
         return jsonify({
             'Alice': {'e': str(keys_db['Alice']['public'][0]), 'n': str(keys_db['Alice']['public'][1])},
             'Bob': {'e': str(keys_db['Bob']['public'][0]), 'n': str(keys_db['Bob']['public'][1])}
         })
-    except Exception as e: return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt_message():
     data = request.json
     try:
+        if not data: return jsonify({'error': 'Sem dados'}), 400
+        
         sender = data.get('sender')
         receiver = data.get('receiver')
         message = data.get('message')
         with_signature = data.get('with_signature', False)
         
-        all_logs = []
+        # VERIFICAÇÃO DE CHAVES (Evita erro 500 se o servidor reiniciou)
+        if not keys_db[receiver]['public'] or not rsa_engines[sender]:
+            return jsonify({'error': 'SERVIDOR REINICIOU: Gere as chaves novamente!'}), 400
+            
         rec_pub_key = keys_db[receiver]['public']
-        if not rec_pub_key: return jsonify({'error': 'Chaves não geradas'}), 400
-        
         engine = rsa_engines[sender]
         pub_key_clean = (safe_int(rec_pub_key[0]), safe_int(rec_pub_key[1]))
+        
+        all_logs = []
         
         # 1. Criptografar
         encrypted_ints, enc_logs = engine.encrypt(message, pub_key_clean)
         all_logs.extend(enc_logs)
 
-        # 2. Assinar (Hashing incluso agora!)
+        # 2. Assinar
         signature_ints = []
         if with_signature:
             sender_priv_key = keys_db[sender]['private']
@@ -68,34 +75,34 @@ def encrypt_message():
             'hex_view': ' '.join([hex(x)[2:].upper() for x in encrypted_ints]),
             'detailed_logs': all_logs
         })
-    except Exception as e: return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        print(f"Erro no encrypt: {e}")
+        return jsonify({'error': str(e)}), 500
 
-# --- NOVO: ROTA DO HACKER (SIMULA ATAQUE MAN-IN-THE-MIDDLE) ---
 @app.route('/hack_attack', methods=['POST'])
 def hack_attack():
     data = request.json
     try:
         receiver = data.get('receiver')
-        fake_message = "MENSAGEM ALTERADA POR EVE!" # Texto fixo ou dinâmico
-        original_signature = data.get('original_signature') # Mantém a assinatura velha
+        if not keys_db[receiver]['public']:
+             return jsonify({'error': 'Chaves perdidas. Gere novamente.'}), 400
+
+        fake_message = "MENSAGEM ALTERADA POR EVE!"
+        original_signature = data.get('original_signature')
         
-        all_logs = []
-        all_logs.append("⚠️ ALERTA: 'Eve' interceptou o pacote na rede!")
-        all_logs.append(f"⚠️ HACK: Substituindo conteúdo original por '{fake_message}'...")
+        all_logs = ["⚠️ ALERTA: 'Eve' interceptou o pacote!", f"⚠️ HACK: Trocando conteúdo por '{fake_message}'..."]
         
-        # Eve criptografa a mensagem falsa para o Bob conseguir ler
         rec_pub_key = keys_db[receiver]['public']
-        engine = RSA(key_size=64) # Eve tem sua própria engine
+        engine = RSA(key_size=64)
         pub_key_clean = (safe_int(rec_pub_key[0]), safe_int(rec_pub_key[1]))
         
         encrypted_fake, _ = engine.encrypt(fake_message, pub_key_clean)
-        all_logs.append(f"⚠️ HACK: Mensagem falsa criptografada com a chave pública de {receiver}.")
-        all_logs.append(f"⚠️ HACK: Mantendo a assinatura original de Alice para tentar enganar.")
+        all_logs.append(f"⚠️ HACK: Criptografando falso com chave de {receiver}.")
 
         return jsonify({
             'encrypted_data': [str(x) for x in encrypted_fake],
-            'signature_data': original_signature, # Assinatura antiga (que não bate com a msg nova)
-            'hex_view': 'DEAD BEEF 0000', # Hex visual de hack
+            'signature_data': original_signature,
+            'hex_view': 'DEAD BEEF 0000',
             'detailed_logs': all_logs
         })
     except Exception as e: return jsonify({'error': str(e)}), 500
@@ -104,8 +111,17 @@ def hack_attack():
 def decrypt_message():
     data = request.json
     try:
+        # PROTEÇÃO CONTRA DADOS VAZIOS
+        if not data or 'encrypted_data' not in data:
+            return jsonify({'error': 'Dados inválidos'}), 400
+
         receiver = data.get('receiver')
         sender = data.get('sender')
+        
+        # VERIFICAÇÃO DE CHAVES (O Pulo do Gato para o erro 400)
+        if not keys_db[receiver]['private'] or not rsa_engines[receiver]:
+            return jsonify({'error': 'SERVIDOR REINICIOU: As chaves sumiram da memória. Por favor, clique em INICIAR novamente.'}), 400
+
         encrypted_data = [safe_int(x) for x in data.get('encrypted_data')]
         signature_raw = data.get('signature_data')
         signature_data = [safe_int(x) for x in signature_raw] if signature_raw else None
@@ -119,8 +135,11 @@ def decrypt_message():
         all_logs.extend(dec_logs)
         
         is_valid = None
-        # 2. Verificar Assinatura (Hashing incluso)
+        # 2. Verificar
         if signature_data:
+            if not keys_db[sender]['public']: # Proteção extra
+                 return jsonify({'error': 'Chave pública do remetente perdida.'}), 400
+                 
             sender_pub_key = keys_db[sender]['public']
             sender_pub_clean = (safe_int(sender_pub_key[0]), safe_int(sender_pub_key[1]))
             is_valid, ver_logs = engine.verify_sign(original_msg, signature_data, sender_pub_clean)
@@ -131,7 +150,9 @@ def decrypt_message():
             'is_valid': is_valid,
             'detailed_logs': all_logs
         })
-    except Exception as e: return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        print(f"Erro no decrypt: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

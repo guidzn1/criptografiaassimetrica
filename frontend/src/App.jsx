@@ -187,7 +187,7 @@ export default function App() {
     } catch (e) { alert("Backend Offline. Verifique o servidor."); }
   };
 
-  const handleSend = async (sender, text) => {
+const handleSend = async (sender, text) => {
     const receiver = sender === 'Alice' ? 'Bob' : 'Alice';
     const tempId = Date.now();
     setChat(prev => [...prev, { id: tempId, sender, receiver, content: text, decrypted: false, time: new Date().toLocaleTimeString() }]);
@@ -195,51 +195,40 @@ export default function App() {
     addLog(`[${sender}] Enviando...`, "info");
 
     try {
-      // 1. CRIPTOGRAFIA NORMAL (ENVIA PARA O BACKEND)
       const res = await axios.post(`${API_URL}/encrypt`, { 
           sender, receiver, message: text, with_signature: useGlobalSig 
       });
       
-      // MOSTRA LOGS DETALHADOS (Simples ou Assinado)
-      if (res.data.detailed_logs) {
-          res.data.detailed_logs.forEach(log => addLog(log, "math"));
-      }
+      if (res.data.detailed_logs) res.data.detailed_logs.forEach(log => addLog(log, "math"));
 
-      // 2. SE O HACKER ESTIVER ATIVO -> INTERCEPTA
       if (hackerMode && useGlobalSig) {
           addLog("⚠️ PACOTE INTERCEPTADO POR EVE!", "error");
-          
-          // Chama a rota de ataque
           const hackRes = await axios.post(`${API_URL}/hack_attack`, {
-              receiver,
-              original_signature: res.data.signature_data
+              receiver, original_signature: res.data.signature_data
           });
-          
           if (hackRes.data.detailed_logs) hackRes.data.detailed_logs.forEach(l => addLog(l, "error"));
           
-          // Atualiza o chat com a mensagem hackeada
           setChat(prev => prev.map(m => m.id === tempId ? { 
-              ...m, 
-              encryptedData: hackRes.data.encrypted_data, 
-              signatureData: hackRes.data.signature_data, 
-              hex: hackRes.data.hex_view 
+              ...m, encryptedData: hackRes.data.encrypted_data, signatureData: hackRes.data.signature_data, hex: hackRes.data.hex_view 
           } : m));
-          
-          setHackerMode(false); // Desliga hacker após um ataque
+          setHackerMode(false);
           return;
       }
       
-      // FLUXO NORMAL (Sem ataque)
-      setChat(prev => prev.map(m => m.id === tempId ? { 
-          ...m, 
-          encryptedData: res.data.encrypted_data, 
-          signatureData: res.data.signature_data, 
-          hex: res.data.hex_view 
-      } : m));
-      
-      addLog(`✓ Pacote na rede.`, "system");
+      setChat(prev => prev.map(m => m.id === tempId ? { ...m, encryptedData: res.data.encrypted_data, signatureData: res.data.signature_data, hex: res.data.hex_view } : m));
+      addLog(`✓ Pacote transmitido.`, "system");
 
-    } catch (e) { console.error(e); addLog("Erro no envio.", "error"); }
+    } catch (e) { 
+        console.error(e); 
+        // TRATAMENTO DE ERRO DE SERVIDOR REINICIADO
+        if (e.response && e.response.status === 400) {
+            showToast("⚠️ SERVIDOR REINICIOU! Clique em 'Iniciar' para gerar novas chaves.", "error");
+            addLog("ERRO CRÍTICO: Chaves perdidas no servidor.", "error");
+            setKeysReady(false); // Força o bloqueio da UI
+        } else {
+            addLog("Erro no envio.", "error"); 
+        }
+    }
   };
 
   const handleDecrypt = async (msg) => {
@@ -251,7 +240,6 @@ export default function App() {
         encrypted_data: msg.encryptedData, signature_data: msg.signatureData
       });
 
-      // MOSTRA LOGS DE DESCRIPTOGRAFIA E VERIFICAÇÃO
       if (res.data.detailed_logs) {
           res.data.detailed_logs.forEach(log => {
               let type = "math";
@@ -262,7 +250,16 @@ export default function App() {
       }
 
       setChat(prev => prev.map(m => m.id === msg.id ? { ...m, decrypted: true, content: res.data.original_message, verified: res.data.is_valid } : m));
-    } catch (e) { addLog("Erro na descriptografia", "error"); }
+    } catch (e) { 
+        // TRATAMENTO DE ERRO DE SERVIDOR REINICIADO
+        if (e.response && e.response.status === 400) {
+            showToast("⚠️ SERVIDOR REINICIOU! As chaves sumiram. Gere novas.", "error");
+            addLog("ERRO: Impossível decifrar. Chaves perdidas.", "error");
+            setKeysReady(false);
+        } else {
+            addLog("Erro na descriptografia", "error"); 
+        }
+    }
   };
 
   return (
