@@ -1,5 +1,6 @@
 import random
 import math
+import hashlib
 from typing import Tuple, List
 
 class RSA:
@@ -12,15 +13,16 @@ class RSA:
         self.e = None
         self.d = None
     
-    # ... (Mantenha os métodos is_prime, generate_prime, extended_gcd e mod_inverse iguais) ...
+    # ... (Mantenha is_prime, generate_prime, extended_gcd, mod_inverse, generate_keypair IGUAIS) ...
+    # Se quiser, copie e cole as funções matemáticas básicas do arquivo anterior aqui.
+    # Vou focar nas funções de Criptografia e Assinatura que mudaram.
+
     def is_prime(self, n: int, k: int = 5) -> bool:
         if n <= 1: return False
         if n <= 3: return True
         if n % 2 == 0: return False
         r, d = 0, n - 1
-        while d % 2 == 0:
-            r += 1
-            d //= 2
+        while d % 2 == 0: r += 1; d //= 2
         for _ in range(k):
             a = random.randint(2, n - 2)
             x = pow(a, d, n)
@@ -40,8 +42,7 @@ class RSA:
     def extended_gcd(self, a: int, b: int) -> Tuple[int, int, int]:
         if a == 0: return b, 0, 1
         gcd, x1, y1 = self.extended_gcd(b % a, a)
-        x = y1 - (b // a) * x1
-        y = x1
+        x = y1 - (b // a) * x1; y = x1
         return gcd, x, y
 
     def mod_inverse(self, a: int, m: int) -> int:
@@ -56,81 +57,82 @@ class RSA:
         self.n = self.p * self.q
         self.phi = (self.p - 1) * (self.q - 1)
         self.e = 65537
-        while math.gcd(self.e, self.phi) != 1:
-            self.e = random.randint(2, self.phi - 1)
+        while math.gcd(self.e, self.phi) != 1: self.e = random.randint(2, self.phi - 1)
         self.d = self.mod_inverse(self.e, self.phi)
         return ((self.e, self.n), (self.d, self.n))
     
-    # --- CRIPTOGRAFIA DETALHADA ---
+    # --- CRIPTOGRAFIA (Confidencialidade) ---
     def encrypt(self, message: str, public_key: Tuple[int, int]) -> Tuple[list, List[str]]:
         e, n = public_key
         encrypted = []
         logs = []
-        
-        logs.append(f"🔐 INICIANDO CRIPTOGRAFIA (Chave e={e}, n={n})")
+        logs.append(f"🔒 CRIPTOGRAFIA: Iniciando para '{message}'...")
         for char in message:
-            m = ord(char) # Converte para ASCII
-            # Fórmula: c = m^e mod n
+            m = ord(char)
             c = pow(m, e, n)
             encrypted.append(c)
-            logs.append(f"   Caractere '{char}' (ASCII {m}) -> {m}^{e} mod {n} = {c}")
-            
+        logs.append(f"   Mensagem cifrada com sucesso (c = m^{e} mod n)")
         return encrypted, logs
 
     def decrypt(self, encrypted_message: list, private_key: Tuple[int, int]) -> Tuple[str, List[str]]:
         d, n = private_key
         decrypted_chars = []
         logs = []
-        
-        logs.append(f"🔓 INICIANDO DESCRIPTOGRAFIA (Chave d={d}, n={n})")
+        logs.append(f"🔓 DESCRIPTOGRAFIA: Usando chave privada...")
         for c in encrypted_message:
-            # Fórmula: m = c^d mod n
             m = pow(c, d, n)
-            char = chr(m)
-            decrypted_chars.append(char)
-            logs.append(f"   Bloco {c} -> {c}^{d} mod {n} = {m} ('{char}')")
-            
-        return ''.join(decrypted_chars), logs
+            decrypted_chars.append(chr(m))
+        msg = ''.join(decrypted_chars)
+        logs.append(f"   Mensagem recuperada: '{msg}'")
+        return msg, logs
 
-    # --- ASSINATURA DETALHADA ---
+    # --- ASSINATURA DIGITAL COM HASH (Autenticidade + Integridade) ---
     def sign(self, message: str, private_key: Tuple[int, int]) -> Tuple[list, List[str]]:
         d, n = private_key
-        signature = []
         logs = []
         
-        logs.append(f"✍️ GERANDO ASSINATURA (Chave Privada d={d})")
-        for char in message:
+        # 1. HASHING (O Resumo)
+        message_hash = hashlib.sha256(message.encode()).hexdigest()
+        logs.append(f"📝 HASHING: Gerando 'Digital Fingerprint' (SHA-256)")
+        logs.append(f"   Hash da mensagem '{message}': {message_hash[:10]}...")
+        
+        # 2. ASSINATURA (Cifra o Hash com a Privada)
+        signature = []
+        logs.append(f"✍️ ASSINATURA: Cifrando o Hash com chave Privada (d={d})")
+        for char in message_hash: # Assina o HASH, não a mensagem
             m = ord(char)
-            # Fórmula: s = m^d mod n
             s = pow(m, d, n)
             signature.append(s)
-            logs.append(f"   Assinando '{char}' (ASCII {m}) -> {m}^{d} mod {n} = {s}")
             
         return signature, logs
 
     def verify_sign(self, message: str, signature: list, public_key: Tuple[int, int]) -> Tuple[bool, List[str]]:
         e, n = public_key
         logs = []
-        logs.append(f"🔍 VERIFICANDO ASSINATURA (Chave Pública e={e})")
+        logs.append(f"🔍 VERIFICAÇÃO: Iniciando auditoria de integridade...")
         
         try:
-            recovered_chars = []
-            for i, s in enumerate(signature):
-                # Fórmula: m' = s^e mod n
+            # 1. RECUPERAR O HASH DA ASSINATURA
+            recovered_hash_chars = []
+            for s in signature:
                 m_prime = pow(s, e, n)
-                char = chr(m_prime)
-                recovered_chars.append(char)
-                logs.append(f"   Verificando bloco {s} -> {s}^{e} mod {n} = {m_prime} ('{char}')")
+                recovered_hash_chars.append(chr(m_prime))
+            recovered_hash = ''.join(recovered_hash_chars)
+            logs.append(f"   Hash recuperado da assinatura: {recovered_hash[:10]}...")
             
-            recovered_msg = ''.join(recovered_chars)
-            is_valid = (recovered_msg == message)
+            # 2. CALCULAR HASH DA MENSAGEM RECEBIDA
+            calculated_hash = hashlib.sha256(message.encode()).hexdigest()
+            logs.append(f"   Hash calculado da mensagem atual: {calculated_hash[:10]}...")
+            
+            # 3. COMPARAR
+            is_valid = (recovered_hash == calculated_hash)
             
             if is_valid:
-                logs.append(f"✅ SUCESSO: Mensagem recuperada '{recovered_msg}' bate com original.")
+                logs.append(f"✅ SUCESSO: Os Hashes coincidem! Integridade e Autoria confirmadas.")
             else:
-                logs.append(f"❌ FALHA: Mensagem recuperada '{recovered_msg}' NÃO bate com '{message}'.")
+                logs.append(f"❌ ALERTA DE PERIGO: Hashes diferentes! A mensagem foi alterada.")
                 
             return is_valid, logs
         except Exception as ex:
-            logs.append(f"❌ ERRO MATEMÁTICO: {str(ex)}")
+            logs.append(f"❌ ERRO: Falha na verificação: {str(ex)}")
             return False, logs

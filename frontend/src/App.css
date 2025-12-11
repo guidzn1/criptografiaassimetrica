@@ -465,6 +465,48 @@ body, html {
   fill: white;
   display: block;
 }
+
+.hacker-btn {
+  background: #333;
+  /* Largura automática para caber o texto */
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 20px; /* Formato Pílula */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Espaço entre ícone e texto */
+  cursor: pointer;
+  color: #888;
+  border: 1px solid #444;
+  transition: all 0.3s ease;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hacker-btn:hover {
+  background: #444;
+  color: #ff453a;
+  border-color: #ff453a;
+}
+
+.hacker-btn.active {
+  background: #ff453a;
+  color: white;
+  border-color: #ff453a;
+  box-shadow: 0 0 15px rgba(255, 69, 58, 0.4);
+  animation: pulse 1.5s infinite;
+}
+
+/* Opcional: esconde o texto em telas muito pequenas se necessário */
+.hacker-label {
+  display: block;
+}
+
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
 /* Responsividade Básica */
 @media (max-width: 1024px) {
   .workspace { flex-direction: column; overflow-y: auto; }
